@@ -65,7 +65,7 @@ services:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
 
   elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:6.8.23"
+    image: "docker.elastic.co/elasticsearch/elasticsearch:8.19.2"
     platform: "linux/amd64"
     environment:
       - "cluster.name=am-cluster"
@@ -74,6 +74,9 @@ services:
       - "bootstrap.memory_lock=true"
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "cluster.routing.allocation.disk.threshold_enabled=${ELASTICSEARCH_DISK_THRESHOLD_ENABLED:-true}"
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "xpack.security.transport.ssl.enabled=false"
     ulimits:
       memlock:
         soft: -1
@@ -186,7 +189,7 @@ services:
       AM_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "elasticsearch:9200"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
       ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
       ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
@@ -213,7 +216,7 @@ services:
       AM_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "elasticsearch:9200"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
       ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
       ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
@@ -258,7 +261,7 @@ services:
       AM_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "elasticsearch:9200"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
       ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
       ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
@@ -327,7 +330,7 @@ services:
       ARCHIVEMATICA_MCPCLIENT_CLIENT_PASSWORD: "demo"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_HOST: "mysql"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_ELASTICSEARCHSERVER: "elasticsearch:9200"
+      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_ELASTICSEARCHSERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_MCPARCHIVEMATICASERVER: "gearmand:4730"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CAPTURE_CLIENT_SCRIPT_OUTPUT: "${AM_CAPTURE_CLIENT_SCRIPT_OUTPUT:-true}"
