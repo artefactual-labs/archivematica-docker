@@ -30,10 +30,6 @@ This can be fixed with:
 sudo sysctl -w vm.max_map_count=262144
 ```
 
-- On Mac computers with ARM cpu, elasticsearch container fails to boot. This will be addressed in 
-the [next archivematica release](https://github.com/archivematica/Issues/issues/1752)
-
-
 Useful commands
 ---------------
 
