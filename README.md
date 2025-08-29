@@ -13,6 +13,8 @@ Usage:
 - AIPs and DIPs are stored in their respective directories (AIPsStore/ and DIPsStore/ )
 
 
+For upgrades, check the [UPGRADE.md](UPGRADE.md) file
+
 
 Known problems
 --------------
