@@ -1,7 +1,6 @@
 volumes:
-  elasticsearch_6_data:
-    name: "am_elasticsearch_6_data"
-    external: true
+  elasticsearch6_data:
+    name: "am_elasticsearch_data"
 
 services:
   elasticsearch:
@@ -30,7 +29,7 @@ services:
       retries: 5
       start_period: 15s
     volumes:
-      - "elasticsearch_6_data:/usr/share/elasticsearch/data"
+      - "elasticsearch6_data:/usr/share/elasticsearch/data"
     ports:
       - "127.0.0.1:52002:9200"
   archivematica-elasticsearch-upgrade:
