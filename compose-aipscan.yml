@@ -43,15 +43,15 @@ services:
       - TYPESENSE_API_KEY=xyz
       - CREATE_DB=true
     ports:
-      - 5000:5000
-    command: gunicorn --preload -t 300 --workers 3 --bind 0.0.0.0:5000 "AIPscan:create_app()"
+      - 5001:5001
+    command: gunicorn --preload -t 300 --workers 3 --bind 0.0.0.0:5001 "AIPscan:create_app()"
     volumes:
       - "aipscan_data:/app/AIPscan/Aggregator/downloads/"
     deploy:
       restart_policy:
         condition: on-failure
     healthcheck:
-      test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5000; exit $?;'"
+      test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5001; exit $?;'"
       interval: 10s
       timeout: 5s
       retries: 5
