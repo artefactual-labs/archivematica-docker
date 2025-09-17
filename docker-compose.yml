@@ -16,8 +16,6 @@ volumes:
   # These are not accessible outside of the docker host and are maintained by
   # Docker.
   mysql_data:
-  elasticsearch_data:
-    name: "am_elasticsearch8_data"
   archivematica_pipeline_data:
   archivematica_storage_service_staging_data:
 
@@ -48,6 +46,7 @@ services:
 
   gearmand:
     image: "artefactual/gearmand:1.1.18-alpine"
+    platform: "linux/amd64"
     command: "--queue-type=builtin"
     user: "gearman"
     ports:
@@ -55,6 +54,7 @@ services:
   
   clamavd:
     image: "clamav/clamav-debian:1.4.3-45"
+    platform: "linux/amd64"
     user: "clamav"
     entrypoint: "/init-unprivileged"
     environment:
@@ -65,38 +65,6 @@ services:
       - "127.0.0.1:62006:3310"
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
-
-  elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:8.19.2"
-    platform: "linux/amd64"
-    environment:
-      - "cluster.name=am-cluster"
-      - "node.name=am-node"
-      - "network.host=0.0.0.0"
-      - "bootstrap.memory_lock=true"
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "cluster.routing.allocation.disk.threshold_enabled=${ELASTICSEARCH_DISK_THRESHOLD_ENABLED:-true}"
-      - "discovery.type=single-node"
-      - "xpack.security.enabled=false"
-      - "xpack.security.transport.ssl.enabled=false"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test: [
-        "CMD-SHELL",
-        "curl -fsSL http://localhost:9200/_cat/health?h=status | sed -r 's/^[[:space:]]+|[[:space:]]+$//g' | grep -q -E 'green|yellow'",
-      ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-    volumes:
-      - "elasticsearch_data:/usr/share/elasticsearch/data"
-    ports:
-      - "127.0.0.1:62002:9200"
-
   nginx:
     image: "nginx:stable-alpine"
     platform: "linux/amd64"
@@ -197,7 +165,7 @@ services:
       ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
       ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
       ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
+      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
     entrypoint:
        - python3
        - -m
@@ -245,13 +213,10 @@ services:
          condition: service_completed_successfully
       archivematica-storage-service:
          condition: service_healthy
-      elasticsearch:
-         condition: service_healthy
       mysql:
          condition: service_healthy
     links:
       - "mysql"
-      - "elasticsearch"
       - "archivematica-storage-service"
 
   archivematica-dashboard:
@@ -269,7 +234,7 @@ services:
       ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
       ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
       ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
+      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
     healthcheck:
       test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8000; exit $?;'"
       interval: 5s
@@ -279,13 +244,10 @@ services:
     depends_on:
       archivematica-dashboard-bootstrap:
          condition: service_completed_successfully
-      elasticsearch:
-         condition: service_healthy
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
     links:
       - "mysql"
-      - "elasticsearch"
       - "gearmand"
       - "archivematica-storage-service"
 
@@ -301,7 +263,7 @@ services:
       ARCHIVEMATICA_MCPSERVER_CLIENT_HOST: "mysql"
       ARCHIVEMATICA_MCPSERVER_CLIENT_DATABASE: "MCP"
       ARCHIVEMATICA_MCPSERVER_MCPSERVER_MCPARCHIVEMATICASERVER: "gearmand:4730"
-      ARCHIVEMATICA_MCPSERVER_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
+      ARCHIVEMATICA_MCPSERVER_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
       ARCHIVEMATICA_MCPSERVER_MCPSERVER_PROMETHEUS_BIND_PORT: "7999"
       ARCHIVEMATICA_MCPSERVER_MCPSERVER_PROMETHEUS_BIND_ADDRESS: "0.0.0.0"
     healthcheck:
@@ -334,7 +296,7 @@ services:
       ARCHIVEMATICA_MCPCLIENT_CLIENT_DATABASE: "MCP"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_ELASTICSEARCHSERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_MCPARCHIVEMATICASERVER: "gearmand:4730"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
+      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CAPTURE_CLIENT_SCRIPT_OUTPUT: "${AM_CAPTURE_CLIENT_SCRIPT_OUTPUT:-true}"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_SERVER: "clamavd:3310"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_CLIENT_MAX_FILE_SIZE: "42"
@@ -349,7 +311,6 @@ services:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
     links:
       - "mysql"
-      - "elasticsearch"
       - "gearmand"
       - "archivematica-storage-service"
 
