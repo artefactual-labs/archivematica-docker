@@ -2,6 +2,7 @@ volumes:
   rabbitmq_data:
   rabbitmq_logs:
   typesense_data:
+  aipscan_data:
 
 services:
   mysql-aipscan-db:
@@ -44,7 +45,7 @@ services:
       - 5000:5000
     command: gunicorn --preload -t 300 --workers 3 --bind 0.0.0.0:5000 "AIPscan:create_app()"
     volumes:
-      - "./.aipscan-data:/app/AIPscan/Aggregator/downloads/"
+      - "aipscan_data:/app/AIPscan/Aggregator/downloads/"
     deploy:
       restart_policy:
         condition: on-failure
@@ -110,7 +111,7 @@ services:
       - CELERY_RESULT_BACKEND=db+mysql+pymysql://archivematica:demo@mysql:3306/celery
     command: celery -A AIPscan.worker.celery worker --loglevel=info
     volumes:
-      - "./.aipscan-data:/app/AIPscan/Aggregator/downloads/"
+      - "aipscan_data:/app/AIPscan/Aggregator/downloads/"
     depends_on:
       mysql:
          condition: service_healthy
