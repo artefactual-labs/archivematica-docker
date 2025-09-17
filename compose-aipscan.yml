@@ -1,0 +1,130 @@
+volumes:
+  rabbitmq_data:
+  rabbitmq_logs:
+  typesense_data:
+
+services:
+  mysql-aipscan-db:
+    image: "percona:8.0"
+    platform: "linux/amd64"
+    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci"
+    environment:
+      MYSQL_ROOT_PASSWORD: "12345"
+      MYSQL_USER: "archivematica"
+      MYSQL_PASSWORD: "demo"
+    volumes:
+      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
+      - "mysql_data:/var/lib/mysql"
+      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
+    cap_add:
+      - "SYS_NICE"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mysql -uroot -p12345 -e "create database if not exists aipscan; 
+             create database if not exists celery;
+             GRANT ALL ON aipscan.* TO 'archivematica'@'%';
+             GRANT ALL ON celery.* TO 'archivematica'@'%';"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  aipscan:
+    image: artefactual/aipscan:latest
+    environment:
+      - CELERY_BROKER_URL=amqp://guest@rabbitmq//
+      - TYPESENSE_HOST=typesense
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
+      - SQLALCHEMY_CELERY_BACKEND=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
+      - CELERY_RESULT_BACKEND=db+mysql+pymysql://archivematica:demo@mysql:3306/celery
+      - TYPESENSE_API_KEY=xyz
+      - CREATE_DB=true
+    ports:
+      - 5000:5000
+    command: gunicorn --preload -t 300 --workers 3 --bind 0.0.0.0:5000 "AIPscan:create_app()"
+    volumes:
+      - "./.aipscan-data:/app/AIPscan/Aggregator/downloads/"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5000; exit $?;'"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    depends_on:
+      mysql:
+         condition: service_healthy
+      mysql-aipscan-db:
+         condition: service_completed_successfully
+
+  aipscan-db-config:
+    image: "percona:8.0"
+    platform: "linux/amd64"
+    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci"
+    environment:
+      MYSQL_ROOT_PASSWORD: "12345"
+      MYSQL_USER: "archivematica"
+      MYSQL_PASSWORD: "demo"
+    volumes:
+      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
+      - "mysql_data:/var/lib/mysql"
+      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
+    cap_add:
+      - "SYS_NICE"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mysql -uroot -p12345 -e 'INSERT IGNORE INTO aipscan.storage_service VALUES (1,"local","http://archivematica-storage-service:8000","test","test",20,0,0);'
+    depends_on:
+      aipscan:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
+    depends_on:
+      - aipscan
+    healthcheck:
+       test: rabbitmq-diagnostics -q ping
+       interval: 30s
+       timeout: 30s
+       retries: 3
+
+  celery-worker:
+    image: artefactual/aipscan:latest
+    environment:
+      - CELERY_BROKER_URL=amqp://guest@rabbitmq//
+      - TYPESENSE_HOST=typesense
+      - TYPESENSE_API_KEY=xyz
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
+      - SQLALCHEMY_CELERY_BACKEND=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
+      - CELERY_RESULT_BACKEND=db+mysql+pymysql://archivematica:demo@mysql:3306/celery
+    command: celery -A AIPscan.worker.celery worker --loglevel=info
+    volumes:
+      - "./.aipscan-data:/app/AIPscan/Aggregator/downloads/"
+    depends_on:
+      mysql:
+         condition: service_healthy
+      rabbitmq:
+         condition: service_healthy
+      aipscan:
+         condition: service_healthy
+
+  typesense:
+    image: typesense/typesense:0.26.0.rc23
+    environment:
+      TYPESENSE_DATA_DIR: /data
+      TYPESENSE_API_KEY: xyz
+    volumes:
+      - typesense_data:/data
+    ports:
+      - 8108:8108
