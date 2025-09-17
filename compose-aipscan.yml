@@ -33,6 +33,7 @@ services:
 
   aipscan:
     image: artefactual/aipscan:latest
+    platform: "linux/amd64"
     environment:
       - CELERY_BROKER_URL=amqp://guest@rabbitmq//
       - TYPESENSE_HOST=typesense
@@ -86,6 +87,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    platform: "linux/amd64"
     ports:
       - 5672:5672
       - 15672:15672
@@ -102,6 +104,7 @@ services:
 
   celery-worker:
     image: artefactual/aipscan:latest
+    platform: "linux/amd64"
     environment:
       - CELERY_BROKER_URL=amqp://guest@rabbitmq//
       - TYPESENSE_HOST=typesense
@@ -122,6 +125,7 @@ services:
 
   typesense:
     image: typesense/typesense:0.26.0.rc23
+    platform: "linux/amd64"
     environment:
       TYPESENSE_DATA_DIR: /data
       TYPESENSE_API_KEY: xyz
