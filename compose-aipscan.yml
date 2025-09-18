@@ -88,6 +88,10 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     platform: "linux/amd64"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     ports:
       - 5672:5672
       - 15672:15672
