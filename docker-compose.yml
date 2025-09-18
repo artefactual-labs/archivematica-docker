@@ -52,19 +52,6 @@ services:
     ports:
       - "127.0.0.1:62004:4730"
   
-  clamavd:
-    image: "clamav/clamav-debian:1.4.3-45"
-    platform: "linux/amd64"
-    user: "clamav"
-    entrypoint: "/init-unprivileged"
-    environment:
-      CLAMD_CONF_MaxFileSize: "42M"
-      CLAMD_CONF_MaxScanSize: "42M"
-      CLAMD_CONF_StreamMaxLength: "100M"
-    ports:
-      - "127.0.0.1:62006:3310"
-    volumes:
-      - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
   nginx:
     image: "nginx:stable-alpine"
     platform: "linux/amd64"
