@@ -107,54 +107,10 @@ services:
       - "62080:80"
       - "62081:8000"
 
-  archivematica-storage-service-migrations:
-    image: "ghcr.io/artefactual/archivematica-storage-service:latest"
-    platform: "linux/amd64"
-    environment:
-      FORWARDED_ALLOW_IPS: "*"
-      SS_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
-      SS_DB_URL: "mysql://archivematica:demo@mysql/SS"
-      SS_GNUPG_HOME_PATH: "/var/archivematica/storage_service/.gnupg"
-      SS_PROMETHEUS_ENABLED: "true"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.storage_service.manage
-       - migrate
-       - --noinput
-    depends_on:
-      mysql:
-         condition: service_healthy
-
-  archivematica-storage-service-bootstrap:
-    image: "ghcr.io/artefactual/archivematica-storage-service:latest"
-    platform: "linux/amd64"
-    environment:
-      FORWARDED_ALLOW_IPS: "*"
-      SS_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
-      SS_DB_URL: "mysql://archivematica:demo@mysql/SS"
-      SS_GNUPG_HOME_PATH: "/var/archivematica/storage_service/.gnupg"
-      SS_PROMETHEUS_ENABLED: "true"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.storage_service.manage
-       - create_user
-       - --username=test
-       - --password=test
-       - --email=test@test.com
-       - --api-key=test
-       - --superuser
-    depends_on:
-      archivematica-storage-service-migrations:
-         condition: service_completed_successfully
-
   archivematica-storage-service:
     image: "ghcr.io/artefactual/archivematica-storage-service:latest"
     platform: "linux/amd64"
-    environment:
+    environment: &ss-env
     # Full list at https://github.com/artefactual/archivematica-storage-service/tree/stable/0.23.x/install#environment-variables
       FORWARDED_ALLOW_IPS: "*"
       SS_GUNICORN_ACCESSLOG: "/dev/null"
@@ -182,81 +138,10 @@ services:
     links:
       - "mysql"
 
-  archivematica-dashboard-migrations:
-    image: "ghcr.io/artefactual/archivematica-dashboard:latest"
-    platform: "linux/amd64"
-    environment:
-      FORWARDED_ALLOW_IPS: "*"
-      AM_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.dashboard.manage
-       - migrate
-       - --noinput
-    depends_on:
-      mysql:
-         condition: service_healthy
-    links:
-      - "mysql"
-
-  archivematica-dashboard-bootstrap:
-    image: "ghcr.io/artefactual/archivematica-dashboard:latest"
-    platform: "linux/amd64"
-    environment:
-      FORWARDED_ALLOW_IPS: "*"
-      AM_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-true}"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.dashboard.manage
-       - install 
-       - --username=test
-       - --password=test
-       - --email=test@test.com
-       - --org-name=test
-       - --org-id=test
-       - --api-key=test
-       - --ss-url=http://archivematica-storage-service:8000
-       - --ss-user=test
-       - --ss-api-key=test
-       - --site-url=http://archivematica-dashboard:8000
-    depends_on:
-      archivematica-dashboard-migrations:
-         condition: service_completed_successfully
-      archivematica-storage-service:
-         condition: service_healthy
-      elasticsearch:
-         condition: service_healthy
-      mysql:
-         condition: service_healthy
-    links:
-      - "mysql"
-      - "elasticsearch"
-      - "archivematica-storage-service"
-
   archivematica-dashboard:
     image: "ghcr.io/artefactual/archivematica-dashboard:latest"
     platform: "linux/amd64"
-    environment:
+    environment: &dashboard-env
     # Full list at https://github.com/artefactual/archivematica/tree/stable/1.17.x/src/dashboard/install#parameter-list
       FORWARDED_ALLOW_IPS: "*"
       AM_GUNICORN_ACCESSLOG: "/dev/null"
@@ -352,3 +237,90 @@ services:
       - "gearmand"
       - "archivematica-storage-service"
 
+
+  # Migrations containers
+  # We run them always to ensure migrations in new versions take effect
+
+  archivematica-storage-service-migrations:
+    image: "ghcr.io/artefactual/archivematica-storage-service:latest"
+    platform: "linux/amd64"
+    environment: *ss-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.storage_service.manage
+       - migrate
+       - --noinput
+    depends_on:
+      mysql:
+         condition: service_healthy
+
+  archivematica-dashboard-migrations:
+    image: "ghcr.io/artefactual/archivematica-dashboard:latest"
+    platform: "linux/amd64"
+    environment: *dashboard-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.dashboard.manage
+       - migrate
+       - --noinput
+    depends_on:
+      mysql:
+         condition: service_healthy
+    links:
+      - "mysql"
+
+  # Bootstrap commands
+  # Those are only needed the first time the system is registered
+
+  archivematica-storage-service-bootstrap:
+    image: "ghcr.io/artefactual/archivematica-storage-service:latest"
+    platform: "linux/amd64"
+    environment: *ss-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.storage_service.manage
+       - create_user
+       - --username=test
+       - --password=test
+       - --email=test@test.com
+       - --api-key=test
+       - --superuser
+    depends_on:
+      archivematica-storage-service-migrations:
+         condition: service_completed_successfully
+
+  archivematica-dashboard-bootstrap:
+    image: "ghcr.io/artefactual/archivematica-dashboard:latest"
+    platform: "linux/amd64"
+    environment: *dashboard-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.dashboard.manage
+       - install
+       - --username=test
+       - --password=test
+       - --email=test@test.com
+       - --org-name=test
+       - --org-id=test
+       - --api-key=test
+       - --ss-url=http://archivematica-storage-service:8000
+       - --ss-user=test
+       - --ss-api-key=test
+       - --site-url=http://archivematica-dashboard:8000
+    depends_on:
+      archivematica-dashboard-migrations:
+         condition: service_completed_successfully
+      archivematica-storage-service:
+         condition: service_healthy
+      elasticsearch:
+         condition: service_healthy
+      mysql:
+         condition: service_healthy
+    links:
+      - "mysql"
+      - "elasticsearch"
+      - "archivematica-storage-service"
