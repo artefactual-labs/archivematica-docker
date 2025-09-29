@@ -18,9 +18,15 @@ volumes:
   mysql_data:
   elasticsearch_data:
     name: "am_elasticsearch8_data"
-  archivematica_pipeline_data:
   archivematica_storage_service_staging_data:
 
+  archivematica_pipeline_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /tmp/sharedDirectory/
+      o: bind
+  
 
 
 services:
