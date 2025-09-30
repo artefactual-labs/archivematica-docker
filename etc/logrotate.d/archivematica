@@ -1,0 +1,13 @@
+/var/log/archivematica/*.log
+{
+        rotate 7
+        daily
+        missingok
+        notifempty
+        delaycompress
+        compress
+        postrotate
+          sudo kill -HUP `pidof rsyslogd` >/dev/null 2>&1 || true
+        endscript
+
+}

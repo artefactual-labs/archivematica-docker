@@ -1,0 +1,143 @@
+name: am
+
+
+services:
+  mysql:
+    logging:
+      driver: syslog
+      options:
+        tag: "am-mysql"
+
+  elasticsearch:
+    logging:
+      driver: syslog
+      options:
+        tag: "am-elasticsearch"
+
+  gearmand:
+    logging:
+      driver: syslog
+      options:
+        tag: "am-gearman"
+
+  clamavd:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-clamav"
+  nginx:
+    logging:
+      driver: syslog
+      options:
+        tag: "am-nginx"
+
+  archivematica-storage-service-migrations:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "1333"
+      SS_GUNICORN_USER: "1333"
+
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-ss-migrations"
+
+  archivematica-storage-service-bootstrap:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "1333"
+      SS_GUNICORN_USER: "1333"
+
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-ss-bootstrap"
+
+  archivematica-storage-service:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "1333"
+      SS_GUNICORN_USER: "1333"
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-ss"
+
+  archivematica-dashboard-migrations:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "1333"
+      SS_GUNICORN_USER: "1333"
+
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-dashboard-migrations"
+
+  archivematica-dashboard-bootstrap:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      AM_GUNICORN_USER: "1333"
+      AM_GUNICORN_GROUP: "1333"
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-dashboard-bootstrap"
+
+  archivematica-dashboard:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      AM_GUNICORN_USER: "1333"
+      AM_GUNICORN_GROUP: "1333"
+    logging:
+      driver: syslog
+      options:
+        tag: "am-dashboard"
+
+  archivematica-mcp-server:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    logging:
+      driver: syslog
+      options:
+        tag: "am-mcp-server"
+
+  archivematica-mcp-client:
+    user: 1333:1333
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    logging:
+      driver: syslog
+      options:
+        tag: "am-mcp-client"
