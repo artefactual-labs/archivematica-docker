@@ -24,7 +24,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /tmp/sharedDirectory/
+      device: /var/archivematica/sharedDirectory/
       o: bind
   
 
@@ -94,10 +94,10 @@ services:
         "CMD-SHELL",
         "curl -fsSL http://localhost:9200/_cat/health?h=status | sed -r 's/^[[:space:]]+|[[:space:]]+$//g' | grep -q -E 'green|yellow'",
       ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 25s
+      retries: 10
+      start_period: 45s
     volumes:
       - "elasticsearch_data:/usr/share/elasticsearch/data"
     ports:
@@ -168,7 +168,6 @@ services:
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_AUDIT_LOG_MIDDLEWARE: "true"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_SESSION_COOKIE_SECURE: "false"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_CSRF_COOKIE_SECURE: "false"
-
     healthcheck:
       test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8000; exit $?;'"
       interval: 5s
@@ -182,6 +181,7 @@ services:
          condition: service_healthy
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
+
     links:
       - "mysql"
       - "elasticsearch"
@@ -269,6 +269,7 @@ services:
     depends_on:
       mysql:
          condition: service_healthy
+
 
   archivematica-dashboard-migrations:
     image: "artefactual/archivematica-dashboard:v1.18.0"
