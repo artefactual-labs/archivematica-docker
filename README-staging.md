@@ -10,6 +10,7 @@ It includes a install.sh script that cares of the following:
  - Rotates logs through logrotate
  - Uses the archivematica-docker systemd unit for starting/stoping the system
  - Uses /var/archivematica for the archivematica-related bind mounts
+ - Users and passwords can be configured in the .env file
 
 
 
