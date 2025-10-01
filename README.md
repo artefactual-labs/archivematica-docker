@@ -5,6 +5,7 @@ Archivematica on docker
 Usage:
 -----
 
+        cp .env-test .env
         docker compose up  -d
 
 - Archivematica dashboard will be accessible at http://localhost:62080 with user test/test
