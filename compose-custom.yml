@@ -8,12 +8,6 @@ services:
       options:
         tag: "am-mysql"
 
-  elasticsearch:
-    logging:
-      driver: syslog
-      options:
-        tag: "am-elasticsearch"
-
   gearmand:
     logging:
       driver: syslog
@@ -21,50 +15,22 @@ services:
         tag: "am-gearman"
 
   clamavd:
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-    logging:
+     logging:
       driver: syslog
       options:
         tag: "am-clamav"
+
+  elasticsearch:
+    logging:
+      driver: syslog
+      options:
+        tag: "am-elasticsearch"
+
   nginx:
     logging:
       driver: syslog
       options:
         tag: "am-nginx"
-
-  archivematica-storage-service-migrations:
-    user: $UID:$UID
-    volumes:
-      - "/etc/passwd:/etc/passwd:ro"
-      - "/etc/group:/etc/group:ro"
-    environment:
-      SS_GUNICORN_GROUP: "$UID"
-      SS_GUNICORN_USER: "$UID"
-
-
-    logging:
-      driver: syslog
-      options:
-        tag: "am-ss-migrations"
-
-  archivematica-storage-service-bootstrap:
-    user: $UID:$UID
-    volumes:
-      - "/etc/passwd:/etc/passwd:ro"
-      - "/etc/group:/etc/group:ro"
-    environment:
-      SS_GUNICORN_GROUP: "$UID"
-      SS_GUNICORN_USER: "$UID"
-
-
-    logging:
-      driver: syslog
-      options:
-        tag: "am-ss-bootstrap"
 
   archivematica-storage-service:
     user: $UID:$UID
@@ -74,40 +40,10 @@ services:
     environment:
       SS_GUNICORN_GROUP: "$UID"
       SS_GUNICORN_USER: "$UID"
-
     logging:
       driver: syslog
       options:
         tag: "am-ss"
-
-  archivematica-dashboard-migrations:
-    user: $UID:$UID
-    volumes:
-      - "/etc/passwd:/etc/passwd:ro"
-      - "/etc/group:/etc/group:ro"
-    environment:
-      SS_GUNICORN_GROUP: "$UID"
-      SS_GUNICORN_USER: "$UID"
-
-
-    logging:
-      driver: syslog
-      options:
-        tag: "am-dashboard-migrations"
-
-  archivematica-dashboard-bootstrap:
-    user: $UID:$UID
-    volumes:
-      - "/etc/passwd:/etc/passwd:ro"
-      - "/etc/group:/etc/group:ro"
-    environment:
-      AM_GUNICORN_USER: "$UID"
-      AM_GUNICORN_GROUP: "$UID"
-
-    logging:
-      driver: syslog
-      options:
-        tag: "am-dashboard-bootstrap"
 
   archivematica-dashboard:
     user: $UID:$UID
@@ -141,3 +77,60 @@ services:
       driver: syslog
       options:
         tag: "am-mcp-client"
+
+  archivematica-storage-service-migrations:
+    user: $UID:$UID
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+    logging:
+      driver: syslog
+      options:
+        tag: "am-ss-migrations"
+
+  archivematica-dashboard-migrations:
+    user: $UID:$UID
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+    logging:
+      driver: syslog
+      options:
+        tag: "am-dashboard-migrations"
+
+  archivematica-storage-service-bootstrap:
+    user: $UID:$UID
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-ss-bootstrap"
+
+
+  archivematica-dashboard-bootstrap:
+    user: $UID:$UID
+    volumes:
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/group:/etc/group:ro"
+    environment:
+      AM_GUNICORN_USER: "$UID"
+      AM_GUNICORN_GROUP: "$UID"
+
+    logging:
+      driver: syslog
+      options:
+        tag: "am-dashboard-bootstrap"
+
