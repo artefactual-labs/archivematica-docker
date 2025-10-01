@@ -1,3 +1,5 @@
 .env
 AIPsStore/
 DIPsStore/
+.sharedDirectory/
+.storage_service/
