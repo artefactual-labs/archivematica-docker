@@ -1,10 +1,9 @@
 Upgrade from Archivematica 1.17.x
 ---------------------------------
 
+Due to changes in the docker-compose environment, we now use bind mounts instead of docker volumes for archivematica pipeline and storage service data.
 
-Archivematica 1.18.x uses Elasticserch 8.x.
-
-In order to migrate from Elasticsearch 6.x, the following process can be followed:
+Also, Archivematica 1.18.x uses Elasticserch 8.x, and in order to migrate from Archivematica 1.17.x with Elasticsearch 6.x, the following process can be followed:
 
 - Check Elasticsearch 6.x index contents, and note them:
 
@@ -17,13 +16,13 @@ In order to migrate from Elasticsearch 6.x, the following process can be followe
 
         docker compose down
 
-- Update your branch
+- Change to the stable/1.18.x branch
 
-        git pull --rebase
+        git checkout dev/stable-1.18.x
 
 - Start the system in upgrade mode:
 
-       docker compose -f docker-compose.yml -f upgrade/docker-compose-es8-upgrade.yml up -d
+       docker compose -f docker-compose.yml -f extrasdocker-compose-es8-upgrade.yml up -d
   This will take care of migrating your Elasticsearch 6.x indexes into ElasticSearch 8.x
 
 - Verify that all the indexes were properly migrated
@@ -35,7 +34,7 @@ In order to migrate from Elasticsearch 6.x, the following process can be followe
 
 - Stop Archivematica 1.18 upgrade mode:
 
-      docker compose -f docker-compose.yml -f upgrade/docker-compose-es8-upgrade.yml down
+      docker compose -f docker-compose.yml -f extras/docker-compose-es8-upgrade.yml down
 
 - Remove old elasticsearch volume (optional)
 

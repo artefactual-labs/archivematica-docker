@@ -3,7 +3,7 @@
 # Basic docker-compose file for running a local instance of Archivematica.
 
 # This file is based on the one at
-# https://github.com/artefactual/archivematica/blob/stable/1.17.x/hack/docker-compose.yml
+# https://github.com/artefactual/archivematica/blob/stable/1.18.x/hack/docker-compose.yml
 
 
 # The name of the project, used to prefix container names and network names.
@@ -124,7 +124,7 @@ services:
     image: "artefactual/archivematica-storage-service:v0.24.0"
     platform: "linux/amd64"
     environment: &ss-env
-    # Full list at https://github.com/artefactual/archivematica-storage-service/tree/stable/0.23.x/install#environment-variables
+    # Full list at https://github.com/artefactual/archivematica-storage-service/tree/stable/0.24.x/install#environment-variables
       FORWARDED_ALLOW_IPS: "*"
       SS_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
@@ -159,7 +159,7 @@ services:
     image: "artefactual/archivematica-dashboard:v1.18.0"
     platform: "linux/amd64"
     environment: &dashboard-env
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.17.x/src/dashboard/install#parameter-list
+    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/dashboard/install#parameter-list
       FORWARDED_ALLOW_IPS: "*"
       AM_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
@@ -198,7 +198,7 @@ services:
     image: "artefactual/archivematica-mcp-server:v1.18.0"
     platform: "linux/amd64"
     environment:
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.17.x/src/MCPServer/install#parameter-list
+    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/MCPServer/install#parameter-list
       DJANGO_SECRET_KEY: "12345"
       DJANGO_SETTINGS_MODULE: "archivematica.MCPServer.settings.common"
       ARCHIVEMATICA_MCPSERVER_CLIENT_USER: "archivematica"
@@ -230,7 +230,7 @@ services:
     image: "artefactual/archivematica-mcp-client:v1.18.0"
     platform: "linux/amd64"
     environment:
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.17.x/src/MCPClient/install#parameter-list
+    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/MCPClient/install#parameter-list
       DJANGO_SECRET_KEY: "12345"
       DJANGO_SETTINGS_MODULE: "archivematica.MCPClient.settings.common"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_USER: "archivematica"
