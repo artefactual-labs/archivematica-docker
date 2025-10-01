@@ -305,10 +305,10 @@ services:
        - -m
        - archivematica.storage_service.manage
        - create_user
-       - --username=test
-       - --password=test
-       - --email=test@test.com
-       - --api-key=test
+       - --username=${ARCHIVEMATICA_SS_USER:-test}
+       - --password=${ARCHIVEMATICA_SS_PASSWORD:-test}
+       - --email=${ARCHIVEMATICA_SS_EMAIL:-test}
+       - --api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
        - --superuser
     depends_on:
       archivematica-storage-service-migrations:
@@ -323,15 +323,15 @@ services:
        - -m
        - archivematica.dashboard.manage
        - install
-       - --username=test
-       - --password=test
-       - --email=test@test.com
-       - --org-name=test
-       - --org-id=test
-       - --api-key=test
+       - --username=${ARCHIVEMATICA_DASHBOARD_USER:-test}
+       - --password=${ARCHIVEMATICA_DASHBOARD_PASSWORD:-test}
+       - --email=${ARCHIVEMATICA_DASHBOARD_EMAIL:-test}
+       - --org-name=${ARCHIVEMATICA_DASHBOARD_ORG_NAME:-test}
+       - --org-id=${ARCHIVEMATICA_DASHBOARD_ORG_ID:-test}
+       - --api-key=${ARCHIVEMATICA_DASHBOARD_API_KEY:-test}
        - --ss-url=http://archivematica-storage-service:8000
-       - --ss-user=test
-       - --ss-api-key=test
+       - --ss-user=${ARCHIVEMATICA_SS_USER:-test}
+       - --ss-api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
        - --site-url=http://archivematica-dashboard:8000
     depends_on:
       archivematica-dashboard-migrations:
