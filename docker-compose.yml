@@ -144,7 +144,7 @@ services:
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
       - "archivematica_storage_service_staging_data:/var/archivematica/storage_service:rw"
-      - "./:/home:rw"
+      - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
       - "./AIPsStore:/var/archivematica/sharedDirectory/www/AIPsStore"
       - "./DIPsStore:/var/archivematica/sharedDirectory/www/DIPsStore"
       # Other folders can be mounted to be available in the tranfer source:
