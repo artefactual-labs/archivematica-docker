@@ -23,14 +23,14 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ${ARCHIVEMATICA_SS_STAGING}
+      device: ${ARCHIVEMATICA_SS_STAGING:-.storage_service}
       o: bind
 
   archivematica_pipeline_data:
     driver: local
     driver_opts:
       type: none
-      device: ${ARCHIVEMATICA_SHAREDDIRECTORY}
+      device: ${ARCHIVEMATICA_SHAREDDIRECTORY:-.sharedDirectory}
       o: bind
   
 
