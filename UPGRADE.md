@@ -22,7 +22,7 @@ Also, Archivematica 1.18.x uses Elasticserch 8.x, and in order to migrate from A
 
 - Start the system in upgrade mode:
 
-       docker compose -f docker-compose.yml -f extrasdocker-compose-es8-upgrade.yml up -d
+       docker compose -f docker-compose.yml -f extras/docker-compose-es8-upgrade.yml up -d
   This will take care of migrating your Elasticsearch 6.x indexes into ElasticSearch 8.x
 
 - Verify that all the indexes were properly migrated
@@ -34,7 +34,7 @@ Also, Archivematica 1.18.x uses Elasticserch 8.x, and in order to migrate from A
 
 - Stop Archivematica 1.18 upgrade mode:
 
-      docker compose -f docker-compose.yml -f extras/docker-compose-es8-upgrade.yml down
+      docker compose -f docker-compose.yml -f extras/compose-es8-upgrade.yml down
 
 - Remove old elasticsearch volume (optional)
 

@@ -5,8 +5,7 @@ Archivematica on docker
 Usage:
 -----
 
-        cp .env-test .env
-        docker compose up  -d
+              docker compose up  -d
 
 - Archivematica dashboard will be accessible at http://localhost:62080 with user test/test
 - Storage service will be available at http://localhost:62081 with user test/test
@@ -15,6 +14,20 @@ Usage:
 
 
 For upgrades, check the [UPGRADE.md](UPGRADE.md) file
+
+
+What's new in 1.18.x ?
+----------------------
+
+- [Archivematica 1.18.x changelog](https://wiki.archivematica.org/Archivematica_1.18.0_and_Storage_Service_0.24.0_release_notes_)
+
+Regarding this repository, there are a few changes too:
+- We can configure default values using a .env file, check .env-test for an example.
+- The docker volumes used for archivematica_pipeline_data and archivematica_storage_service_staging volumes are now configured as local folders, and made avalable to the containers through bind mounts.
+This allows to put them in a different filesystem with more space without having to reconfigure docker volumes.
+- The name of the elasticsearch data volume has been changed to match Elasticseach version. Check [UPGRADE.md](UPGRADE.md)
+- Archivematica [audit log](https://github.com/artefactual-labs/auditmatica/blob/main/README.md#usernames) is now enabled by default
+- Archivematica's backlog and appraisal tabs have been disabled, to better mimic the OAIS model in Archivematica
 
 
 Known problems
@@ -33,6 +46,16 @@ This can be fixed with:
 sudo sysctl -w vm.max_map_count=262144
 ```
 
+- MCPServer fails to boot and shows
+
+```
+PermissionError: [Errno 13] Permission denied: '/var/archivematica/sharedDirectory/www/AIPsStore/transferBacklog'
+```
+
+This is due to the permissions used by the user running archivematica inside the docker container. An easy workaround is ```chmod 777 AIPsStore```
+
+
+
 Useful commands
 ---------------
 
@@ -46,8 +69,8 @@ Useful commands
 
 - Running manage.py commands:
 
-        docker compose exec -i -t archivematica-dashboard python manage.py
-        docker compose exec -i -t archivematica-storage-service python manage.py
+        docker compose exec -i -t archivematica-dashboard python3 -m archivematica.dashboard.manage
+        docker compose exec -i -t archivematica-storage-service python3 -m archivematica.storage_service.manage
 
 - Taking mysql backups:
 
