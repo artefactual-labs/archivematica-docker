@@ -1,0 +1,85 @@
+#
+# In order to run the services under a different UID tham 1000, we need
+# to create a custom passwd and group files, and add the uid to the .env test
+#
+#
+# 
+# echo UID=$(id -u) | tee -a .env
+# cat  <<EOF > .custom-passwd
+# archivematica:x:$UID:$UID::/var/lib/archivematica:/bin/bash
+# EOF
+# cat  <<EOF > .custom-group
+# archivematica:x:$UID:
+#  EOF
+#
+# Once the files are created, launch docker with:
+#     docker compose -f docker-compose.yml -f compose-custom-user.yml up -d
+#
+
+services:
+  archivematica-storage-service:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+  
+  archivematica-dashboard:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      AM_GUNICORN_USER: "$UID"
+      AM_GUNICORN_GROUP: "$UID"
+ 
+  archivematica-mcp-server:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+
+  archivematica-mcp-client:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+
+  archivematica-storage-service-migrations:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+
+  archivematica-dashboard-migrations:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+
+  archivematica-storage-service-bootstrap:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      SS_GUNICORN_GROUP: "$UID"
+      SS_GUNICORN_USER: "$UID"
+
+  archivematica-dashboard-bootstrap:
+    user: $UID:$UID
+    volumes:
+      - ".custom-passwd:/etc/passwd:ro"
+      - ".custom-group:/etc/group:ro"
+    environment:
+      AM_GUNICORN_USER: "$UID"
+      AM_GUNICORN_GROUP: "$UID"
+
