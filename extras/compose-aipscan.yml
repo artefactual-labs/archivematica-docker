@@ -39,9 +39,9 @@ services:
         condition: service_healthy
 
   aipscan:
-    image: artefactual/aipscan:latest
+    image: aipscan-aipscan:latest
     platform: "linux/amd64"
-    environment:
+    environment: &aipscan-env
       - CELERY_BROKER_URL=amqp://guest@rabbitmq//
       - TYPESENSE_HOST=typesense
       - SQLALCHEMY_DATABASE_URI=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
@@ -49,22 +49,32 @@ services:
       - CELERY_RESULT_BACKEND=db+mysql+pymysql://archivematica:demo@mysql:3306/celery
       - TYPESENSE_API_KEY=xyz
       - CREATE_DB=true
+      - AGGREGATOR_DOWNLOAD_ROOT=/downloads
+      - SECRET_KEY="12345"
     ports:
       - 5001:5001
     command:  gunicorn --preload --timeout 10 --workers 1 --error-logfile - --log-level debug --capture-output --bind 0.0.0.0:5001 "AIPscan:create_app()"
     volumes:
-      - "aipscan_data:/AIPscan/Aggregator/downloads/:rw"
+      - "aipscan_data:/downloads/:rw"
     healthcheck:
       test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5001; exit $?;'"
       interval: 10s
       timeout: 5s
       retries: 5
-
     depends_on:
       mysql:
          condition: service_healthy
-      mysql-aipscan-db:
+      aipscan-migrate:
          condition: service_completed_successfully
+
+  aipscan-migrate:
+    image: "aipscan-aipscan:latest"
+    environment: *aipscan-env
+    command: flask db upgrade
+    restart: on-failure
+    depends_on:
+      mysql-aipscan-db:
+        condition: service_completed_successfully
 
   aipscan-db-config:
     image: "percona/percona-server:8.0.43-34"
@@ -110,19 +120,13 @@ services:
        timeout: 30s
        retries: 3
 
-  celery-worker:
-    image: artefactual/aipscan:latest
+  aipscan-worker:
+    image: aipscan-aipscan:latest
     platform: "linux/amd64"
-    environment:
-      - CELERY_BROKER_URL=amqp://guest@rabbitmq//
-      - TYPESENSE_HOST=typesense
-      - TYPESENSE_API_KEY=xyz
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
-      - SQLALCHEMY_CELERY_BACKEND=mysql+pymysql://archivematica:demo@mysql:3306/aipscan
-      - CELERY_RESULT_BACKEND=db+mysql+pymysql://archivematica:demo@mysql:3306/celery
+    environment: *aipscan-env
     command: celery -A AIPscan.worker.celery worker --loglevel=debug
     volumes:
-      - "aipscan_data:/AIPscan/Aggregator/downloads/:rw"
+      - "aipscan_data:/downloads/:rw"
     depends_on:
       mysql:
          condition: service_healthy
