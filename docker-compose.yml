@@ -15,6 +15,7 @@ volumes:
   # Internal named volumes.
   # These are not accessible outside of the docker host and are maintained by
   # Docker.
+  clamavd_data:
   mysql_data:
   elasticsearch_data:
     name: "am_elasticsearch8_data"
@@ -76,11 +77,11 @@ services:
       resources:
         limits:
           memory: 4096M
-
     ports:
       - "127.0.0.1:62006:3310"
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
+      - "clamavd_data:/var/lib/clamav/:rw"
 
   elasticsearch:
     image: "docker.elastic.co/elasticsearch/elasticsearch:8.19.3"
