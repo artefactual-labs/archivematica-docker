@@ -1,6 +1,6 @@
 ---
 
-# Basic docker-compose file for running a local instance of Archivematica.
+# Basic docker-compose file for running a ocal instance of Archivematica.
 
 # This file is based on the one at
 # https://github.com/artefactual/archivematica/blob/stable/1.18.x/hack/docker-compose.yml
@@ -15,9 +15,6 @@ volumes:
   # Internal named volumes.
   # These are not accessible outside of the docker host and are maintained by
   # Docker.
-  mysql_data:
-  elasticsearch_data:
-    name: "am_elasticsearch8_data"
 
   archivematica_storage_service_staging_data:
     driver: local
@@ -33,29 +30,8 @@ volumes:
       device: ${ARCHIVEMATICA_SHAREDDIRECTORY:-.sharedDirectory}
       o: bind
   
-
-
 services:
 
-  mysql:
-    image: "percona/percona-server:8.0.43-34"
-    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci"
-    environment:
-      MYSQL_ROOT_PASSWORD: "12345"
-      MYSQL_USER: "archivematica"
-      MYSQL_PASSWORD: "demo"
-    volumes:
-      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
-      - "mysql_data:/var/lib/mysql"
-      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
-    ports:
-      - "127.0.0.1:62001:3306"
-    cap_add:
-      - "SYS_NICE"
-    healthcheck:
-       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-       timeout: 10s
-       retries: 10
 
   gearmand:
     image: "artefactual/gearmand:1.1.22-alpine"
@@ -64,59 +40,6 @@ services:
     ports:
       - "127.0.0.1:62004:4730"
   
-  clamavd:
-    image: "clamav/clamav-debian:1.4.3-57"
-    user: "clamav"
-    entrypoint: "/init-unprivileged"
-    environment:
-      CLAMD_CONF_MaxFileSize: "42M"
-      CLAMD_CONF_MaxScanSize: "42M"
-      CLAMD_CONF_StreamMaxLength: "100M"
-    ports:
-      - "127.0.0.1:62006:3310"
-    volumes:
-      - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
-
-  elasticsearch:
-    image: "docker.elastic.co/elasticsearch/elasticsearch:8.19.3"
-    environment:
-      - "cluster.name=am-cluster"
-      - "node.name=am-node"
-      - "network.host=0.0.0.0"
-      - "bootstrap.memory_lock=true"
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "cluster.routing.allocation.disk.threshold_enabled=${ELASTICSEARCH_DISK_THRESHOLD_ENABLED:-true}"
-      - "discovery.type=single-node"
-      - "xpack.security.enabled=false"
-      - "xpack.security.transport.ssl.enabled=false"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test: [
-        "CMD-SHELL",
-        "curl -fsSL http://localhost:9200/_cat/health?h=status | sed -r 's/^[[:space:]]+|[[:space:]]+$//g' | grep -q -E 'green|yellow'",
-      ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 45s
-    volumes:
-      - "elasticsearch_data:/usr/share/elasticsearch/data"
-    ports:
-      - "127.0.0.1:62002:9200"
-
-  nginx:
-    image: "nginx:1.29.1"
-    volumes:
-      - "./.etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "./.etc/nginx/conf.d/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
-      - "./.etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
-    ports:
-      - "62080:80"
-      - "62081:8000"
-
   archivematica-storage-service:
     image: "artefactual/archivematica-storage-service:v0.24.0"
     platform: "linux/amd64"
@@ -125,7 +48,7 @@ services:
       FORWARDED_ALLOW_IPS: "*"
       SS_GUNICORN_ACCESSLOG: "/dev/null"
       DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
-      SS_DB_URL: "mysql://archivematica:demo@mysql/SS"
+      SS_DB_URL: "mysql://root:pass@localhost/SS"
       SS_GNUPG_HOME_PATH: "/var/archivematica/storage_service/.gnupg"
       SS_PROMETHEUS_ENABLED: "true"
       SS_AUDIT_LOG_MIDDLEWARE: "true"
@@ -147,10 +70,9 @@ services:
       - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
       - "./AIPsStore:/var/archivematica/sharedDirectory/www/AIPsStore"
       - "./DIPsStore:/var/archivematica/sharedDirectory/www/DIPsStore"
+      - /var/lib/mysql/:/var/run/mysqld/
       # Other folders can be mounted to be available in the tranfer source:
       # - "~/Downloads:/home/Downloads"
-    links:
-      - "mysql"
 
   archivematica-dashboard:
     image: "artefactual/archivematica-dashboard:v1.18.0"
@@ -163,9 +85,9 @@ services:
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "am"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "popo!landia33"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "localhost"
       ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
       ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-aips}"
       ARCHIVEMATICA_DASHBOARD_DASHBOARD_AUDIT_LOG_MIDDLEWARE: "true"
@@ -180,14 +102,10 @@ services:
     depends_on:
       archivematica-dashboard-bootstrap:
          condition: service_completed_successfully
-      elasticsearch:
-         condition: service_healthy
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
-
+      - /var/lib/mysql/:/var/run/mysqld/
     links:
-      - "mysql"
-      - "elasticsearch"
       - "gearmand"
       - "archivematica-storage-service"
 
@@ -200,7 +118,7 @@ services:
       DJANGO_SETTINGS_MODULE: "archivematica.MCPServer.settings.common"
       ARCHIVEMATICA_MCPSERVER_CLIENT_USER: "archivematica"
       ARCHIVEMATICA_MCPSERVER_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_MCPSERVER_CLIENT_HOST: "mysql"
+      ARCHIVEMATICA_MCPSERVER_CLIENT_HOST: "localhost"
       ARCHIVEMATICA_MCPSERVER_CLIENT_DATABASE: "MCP"
       ARCHIVEMATICA_MCPSERVER_MCPSERVER_MCPARCHIVEMATICASERVER: "gearmand:4730"
       ARCHIVEMATICA_MCPSERVER_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-aips}"
@@ -219,8 +137,9 @@ services:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
       - "./AIPsStore:/var/archivematica/sharedDirectory/www/AIPsStore"
       - "./DIPsStore:/var/archivematica/sharedDirectory/www/DIPsStore"
+      - /var/lib/mysql/:/var/run/mysqld/
+
     links:
-      - "mysql"
       - "gearmand"
 
   archivematica-mcp-client:
@@ -232,7 +151,7 @@ services:
       DJANGO_SETTINGS_MODULE: "archivematica.MCPClient.settings.common"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_USER: "archivematica"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_MCPCLIENT_CLIENT_HOST: "mysql"
+      ARCHIVEMATICA_MCPCLIENT_CLIENT_HOST: "localhost"
       ARCHIVEMATICA_MCPCLIENT_CLIENT_DATABASE: "MCP"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_ELASTICSEARCHSERVER: "http://elasticsearch:9200"
       ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_MCPARCHIVEMATICASERVER: "gearmand:4730"
@@ -249,9 +168,8 @@ services:
         condition: service_healthy
     volumes:
       - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:rw"
+      - /var/lib/mysql/:/var/run/mysqld/
     links:
-      - "mysql"
-      - "elasticsearch"
       - "gearmand"
       - "archivematica-storage-service"
 
@@ -269,9 +187,8 @@ services:
        - archivematica.storage_service.manage
        - migrate
        - --noinput
-    depends_on:
-      mysql:
-         condition: service_healthy
+    volumes:
+      - /var/lib/mysql/:/var/run/mysqld/
 
 
   archivematica-dashboard-migrations:
@@ -284,11 +201,9 @@ services:
        - archivematica.dashboard.manage
        - migrate
        - --noinput
-    depends_on:
-      mysql:
-         condition: service_healthy
-    links:
-      - "mysql"
+    volumes:
+      - /var/lib/mysql/:/var/run/mysqld/
+
 
   # Bootstrap commands
   # Those are only needed the first time the system is registered
@@ -310,6 +225,8 @@ services:
     depends_on:
       archivematica-storage-service-migrations:
          condition: service_completed_successfully
+    volumes:
+      - /var/lib/mysql/:/var/run/mysqld/
 
   archivematica-dashboard-bootstrap:
     image: "artefactual/archivematica-dashboard:v1.18.0"
@@ -335,11 +252,7 @@ services:
          condition: service_completed_successfully
       archivematica-storage-service:
          condition: service_healthy
-      elasticsearch:
-         condition: service_healthy
-      mysql:
-         condition: service_healthy
     links:
-      - "mysql"
-      - "elasticsearch"
       - "archivematica-storage-service"
+    volumes:
+      - /var/lib/mysql/:/var/run/mysqld/
