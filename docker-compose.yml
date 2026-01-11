@@ -17,6 +17,7 @@ volumes:
   # Docker.
   mysql_data:
   elasticsearch_data:
+    name: "am_elasticsearch8_data"
   archivematica_pipeline_data:
   archivematica_storage_service_staging_data:
 
@@ -87,10 +88,10 @@ services:
         "CMD-SHELL",
         "curl -fsSL http://localhost:9200/_cat/health?h=status | sed -r 's/^[[:space:]]+|[[:space:]]+$//g' | grep -q -E 'green|yellow'",
       ]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
-      start_period: 15s
+      start_period: 20s
     volumes:
       - "elasticsearch_data:/usr/share/elasticsearch/data"
     ports:

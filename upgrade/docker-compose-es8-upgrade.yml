@@ -1,0 +1,63 @@
+volumes:
+  elasticsearch6_data:
+    name: "am_elasticsearch_data"
+
+services:
+  elasticsearch:
+    environment:
+      - "reindex.remote.whitelist=elasticsearch-6:9200"
+  elasticsearch-6:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:6.8.23"
+    environment:
+      - "cluster.name=am-cluster"
+      - "node.name=am-node"
+      - "network.host=0.0.0.0"
+      - "bootstrap.memory_lock=true"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "cluster.routing.allocation.disk.threshold_enabled=${ELASTICSEARCH_DISK_THRESHOLD_ENABLED:-true}"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -fsSL http://localhost:9200/_cat/health?h=status | sed -r 's/^[[:space:]]+|[[:space:]]+$//g' | grep -q -E 'green|yellow'",
+      ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    volumes:
+      - "elasticsearch6_data:/usr/share/elasticsearch/data"
+    ports:
+      - "127.0.0.1:52002:9200"
+  archivematica-elasticsearch-upgrade:
+    image: "ghcr.io/artefactual/archivematica-dashboard:latest"
+    platform: "linux/amd64"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -eo pipefail
+        for index in aips aipfiles transfers transferfiles
+        do
+        if [[ $(curl -X GET -s "elasticsearch:9200/$$index/_count?pretty" | grep "count" | cut -d\: -f2) == ' 0,' ]]
+        then
+          curl -s --request POST "elasticsearch:9200/_reindex?pretty" --header 'Content-Type: application/json' --data ' { "source": {"remote": { "host": "http://elasticsearch-6:9200" }, "index": "'$$index'" }, "dest": { "index": "'$$index'" } }' 
+          echo "Reindexed $$index"
+        else
+          echo "Index $$index is already populated"
+        fi
+        done
+
+    depends_on:
+      elasticsearch-6:
+         condition: service_healthy
+      elasticsearch:
+         condition: service_healthy
+      archivematica-dashboard:
+         condition: service_healthy
+    links:
+      - "elasticsearch"
+      - "elasticsearch-6"
