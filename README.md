@@ -89,6 +89,29 @@ Useful commands
 
 The AIPs and DIPs stored won't be removed.
 
+## Using extras
+
+The repository contains an extras/ folder with Archivematica adjacent projects: Enduro and Aipscan
+
+In order to use them, configure the COMPOSE_FILE as in
+
+# For bash users (most of you)
+export COMPOSE_FILE="docker-compose.yml:extras/compose-enduro.yml"
+
+# For fish users
+set -lx COMPOSE_FILE "docker-compose.yml:extras/compose-enduro.yml"
+
+## Port allocation
+
+| Service         | Host      | External port  | Internal port |
+|-----------------|-----------|----------------|---------------|
+| Archivematica   | localhost |    62080      |     8000      |
+| Storage Service | localhost   |    62081        |     8000      |
+| Enduro Dashboard| localhost |    9000        |     9000      |
+| Temporal UI     | localhost |    7440        |     7440      |
+| SeaWeed UI (S3)     | localhost |    7461        |     7461      |
+| AipScan      | localhost   |    5001        |     5001      |
+
 
 ---
 
