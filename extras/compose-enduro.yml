@@ -103,6 +103,32 @@ services:
     ports:
       - "127.0.0.1:7440:8080"
 
+  enduro:
+    image: "alpine:3.10"
+    depends_on:
+      temporal:
+        condition: service_healthy
+      archivematica-dashboard:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - "TEMPORAL_ADDRESS=temporal:7233"
+        #- "TEMPORAL_CORS_ORIGINS=http://localhost:7440"
+    volumes:
+      - "./extras/enduro-bootstrap/enduro.toml:/etc/enduro.toml:ro"
+      - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
+    ports:
+      - "127.0.0.1:9000:9000"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        apk --update add openssl wget unzip && rm -rf /var/cache/apk/*
+        wget -q https://github.com/artefactual-labs/enduro/releases/download/v0.46.1/enduro_0.46.1_Linux-64bit.tar.gz
+        tar zxvf enduro_0.46.1_Linux-64bit.tar.gz
+        enduro_0.46.1_Linux-64bit/enduro --config /etc/enduro.toml
+
   seaweedfs:
     image: "chrislusf/seaweedfs:4.31"
     command: "mini -dir=/data -ip.bind=0.0.0.0 -bucket=sips -master.volumeSizeLimitMB=64 -webdav=false -admin.ui=false -s3.port.iceberg=0"
@@ -124,5 +150,7 @@ services:
     # second and last minor releases in a major version as LTS; newer interim
     # minors, such as 8.4, are STS.
     image: "redis:8.2.6-alpine3.22"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     ports:
-      - "127.0.0.1:7470:6379"
+      - "127.0.0.1:6379:7470"
