@@ -77,14 +77,14 @@ processingDir = ""
 processingConfig = "automated"
 # transferLocationID = "88f6b517-c0cc-411b-8abf-79544ce96f54"
 #transferLocationID = "aa5d7883-4b8d-4117-9121-16a9a9e5b7fb"
-storageServiceURL = "http://test:test@127.0.0.1:62081"
+storageServiceURL = "http://test:test@archivematica-storage-service:8000"
 capacity = 3
 retryDeadline = "10m"
 transferDeadline = "24h"
 unbag = false
 
 [pipeline.recovery]
-reconcileExistingAIP = true
+reconcileExistingAIP = false
 
 [validation]
 checksumsCheckEnabled = false
