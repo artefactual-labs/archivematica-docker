@@ -75,29 +75,19 @@ services:
     depends_on:
       mysql-aipscan-db:
         condition: service_completed_successfully
-
-  aipscan-db-config:
-    image: "percona/percona-server:8.0.43-34"
-    platform: "linux/amd64"
-    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci"
-    environment:
-      MYSQL_ROOT_PASSWORD: "12345"
-      MYSQL_USER: "archivematica"
-      MYSQL_PASSWORD: "demo"
-    volumes:
-      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
-      - "mysql_data:/var/lib/mysql"
-      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
-    cap_add:
-      - "SYS_NICE"
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        mysql -uroot -p12345 -e 'INSERT IGNORE INTO aipscan.storage_service VALUES (1,"local","http://archivematica-storage-service:8000","test","test",20,0,0);'
+  aipscan-ss-configure:
+    image: "aipscan-aipscan:latest"
+    environment: *aipscan-env
+    command: >
+      python -m  flask storage-service-bootstrap --name "local"
+             --url "http://archivematica-storage-service:8000"
+             --username "test"
+             --api-key "test"
+             --default
+    restart: on-failure
     depends_on:
-      aipscan:
-        condition: service_healthy
+      aipscan-migrate:
+        condition: service_completed_successfully
 
   rabbitmq:
     image: rabbitmq:4.1.4-management
