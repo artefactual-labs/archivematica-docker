@@ -35,7 +35,7 @@ services:
              GRANT ALL ON aipscan.* TO 'archivematica'@'%';
              GRANT ALL ON celery.* TO 'archivematica'@'%';"
     depends_on:
-      mysql:
+      archivematica-storage-service:
         condition: service_healthy
 
   aipscan:
