@@ -39,7 +39,7 @@ services:
         condition: service_healthy
 
   aipscan:
-    image: aipscan-aipscan:latest
+    image: artefactual/aipscan:pre
     platform: "linux/amd64"
     environment: &aipscan-env
       - CELERY_BROKER_URL=amqp://guest@rabbitmq//
@@ -68,7 +68,7 @@ services:
          condition: service_completed_successfully
 
   aipscan-migrate:
-    image: "aipscan-aipscan:latest"
+    image: "artefactual/aipscan:pre"
     environment: *aipscan-env
     command: flask db upgrade
     restart: on-failure
@@ -76,7 +76,7 @@ services:
       mysql-aipscan-db:
         condition: service_completed_successfully
   aipscan-ss-configure:
-    image: "aipscan-aipscan:latest"
+    image: "artefactual/aipscan:pre"
     environment: *aipscan-env
     command: >
       python -m  flask storage-service-bootstrap --name "local"
@@ -111,7 +111,7 @@ services:
        retries: 3
 
   aipscan-worker:
-    image: aipscan-aipscan:latest
+    image: artefactual/aipscan:pre
     platform: "linux/amd64"
     environment: *aipscan-env
     command: celery -A AIPscan.worker.celery worker --loglevel=debug
