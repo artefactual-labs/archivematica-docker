@@ -1,0 +1,35 @@
+#
+# In order to run the services under a different UID tham 1000, we need
+# to create a custom passwd and group files, and add the uid to the .env test
+#
+#
+# 
+# echo UID=$(id -u) | tee -a .env
+# cat  <<EOF > .aipscan-passwd
+# aipscan:x:$UID:$UID::/var/lib/aipscan:/bin/bash
+# EOF
+# cat  <<EOF > .aipscan-group
+# aipscan:x:$UID:
+#  EOF
+#
+# Once the files are created, add the file to your COMPOSE_FILE_with:
+#
+#   (bash): export COMPOSE_FILE="docker-compose.yml:extras/compose-aipscan.yml:extras/compose-custom-user.yml:extras/compose-aipscan-custom-user.yml"
+#   (fish): set -lx COMPOSE_FILE "docker-compose.yml:extras/compose-aipscan.yml:extras/compose-custom-user.yml:extras/compose-aipscan-custom-user.yml"
+#
+#   docker compose  up -d
+#
+
+services:
+  aipscan:
+    platform: "linux/amd64"
+    user: $UID:$UID
+    volumes:
+      - ".aipscan-passwd:/etc/passwd:ro"
+      - ".aipscan-group:/etc/group:ro"
+
+  aipscan-worker:
+    user: $UID:$UID
+    volumes:
+      - ".aipscan-passwd:/etc/passwd:ro"
+      - ".aipscan-group:/etc/group:ro"
