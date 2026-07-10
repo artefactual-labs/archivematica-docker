@@ -57,11 +57,11 @@ services:
     environment:
       - "DB=mysql8"
       - "DB_PORT=3306"
-      - "MYSQL_USER=archivematica"
-      - "MYSQL_PWD=demo"
+      - "MYSQL_USER=temporal"
+      - "MYSQL_PWD=temporal123"
       - "MYSQL_SEEDS=mysql"
-      - "SQL_USER=archivematica"
-      - "SQL_PASSWORD=demo"
+      - "SQL_USER=temporal"
+      - "SQL_PASSWORD=temporal123"
       - "BIND_ON_IP=0.0.0.0"
       - "DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml"
     volumes:

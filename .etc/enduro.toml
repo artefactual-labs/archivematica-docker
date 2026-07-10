@@ -23,7 +23,7 @@ legacyListen = "127.0.0.1:9002"
 debug = false
 
 [database]
-dsn = "archivematica:demo@tcp(mysql:3306)/enduro"
+dsn = "enduro:enduro123@tcp(mysql:3306)/enduro"
 
 [extractActivity]
 dirMode = "0o700"
@@ -57,7 +57,7 @@ transferType = "standard"
 
 [[watcher.filesystem]]
 name = "dev-fs"
-path = "/home/enduro"
+path = "/home/test/.failed"
 inotify = false
 pipeline = "am"
 completedDir = "/home/test/.done/"
