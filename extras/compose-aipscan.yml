@@ -23,7 +23,7 @@ services:
     volumes:
       - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
       - "mysql_data:/var/lib/mysql"
-      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
+      - "./.archivematica-init/:/docker-entrypoint-initdb.d/:ro"
     cap_add:
       - "SYS_NICE"
     entrypoint:

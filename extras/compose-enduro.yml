@@ -10,7 +10,7 @@ services:
     volumes:
       - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
       - "mysql_data:/var/lib/mysql"
-      - "./.init-scripts/:/docker-entrypoint-initdb.d/:ro"
+      - "./.archivematica-init/:/docker-entrypoint-initdb.d/:ro"
     cap_add:
       - "SYS_NICE"
     entrypoint:
@@ -45,7 +45,7 @@ services:
       - "MYSQL_SEEDS=mysql"
       - "SQL_PASSWORD=demo"
     volumes:
-      - "./extras/enduro-bootstrap/:/compose"
+      - ".enduro-init/:/compose"
     entrypoint: ["/bin/sh"]
     command: "/compose/setup-mysql.sh"
 
@@ -66,7 +66,7 @@ services:
       - "BIND_ON_IP=0.0.0.0"
       - "DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml"
     volumes:
-      - "./extras/enduro-bootstrap/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
+      - ".enduro-init/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
     ports:
       - "127.0.0.1:7233:7233"
     healthcheck:
@@ -88,7 +88,7 @@ services:
       - "TEMPORAL_ADDRESS=temporal:7233"
       - "DEFAULT_NAMESPACE=default"
     volumes:
-      - "./extras/enduro-bootstrap/:/compose"
+      - ".enduro-init/:/compose"
     entrypoint: ["/bin/sh"]
     command: "/compose/create-namespace.sh"
 
@@ -116,7 +116,7 @@ services:
       - "TEMPORAL_ADDRESS=temporal:7233"
         #- "TEMPORAL_CORS_ORIGINS=http://localhost:7440"
     volumes:
-      - "./extras/enduro-bootstrap/enduro.toml:/etc/enduro.toml:ro"
+      - ".enduro-init/enduro.toml:/etc/enduro.toml:ro"
       - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
     ports:
       - "127.0.0.1:9000:9000"
