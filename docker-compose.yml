@@ -58,42 +58,6 @@ services:
        timeout: 10s
        retries: 10
 
-  gearmand:
-    image: "artefactual/gearmand:1.1.22-alpine"
-    command: "--queue-type=builtin"
-    user: "gearman"
-    ports:
-      - "127.0.0.1:62004:4730"
-  
-  clamavd:
-    image: "clamav/clamav-debian:1.5.3"
-    user: "clamav"
-    entrypoint: "/init-unprivileged"
-    environment:
-      CLAMD_CONF_MaxFileSize: "42M"
-      CLAMD_CONF_MaxScanSize: "42M"
-      CLAMD_CONF_StreamMaxLength: "100M"
-    deploy:
-      resources:
-        limits:
-          memory: 4096M
-    ports:
-      - "127.0.0.1:62006:3310"
-    volumes:
-      - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
-      - "clamavd_data:/var/lib/clamav/:rw"
-
-  
-  nginx:
-    image: "nginx:1.29.1"
-    volumes:
-      - "./.etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "./.etc/nginx/conf.d/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
-      - "./.etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
-    ports:
-      - "62080:80"
-      - "62081:8000"
-
   archivematica-storage-service:
     image: "artefactual/archivematica-storage-service:v0.24.0"
     platform: "linux/amd64"
@@ -173,6 +137,41 @@ services:
       - "mysql"
       - "gearmand"
       - "archivematica-storage-service"
+
+  gearmand:
+    image: "artefactual/gearmand:1.1.22-alpine"
+    command: "--queue-type=builtin"
+    user: "gearman"
+    ports:
+      - "127.0.0.1:62004:4730"
+
+  clamavd:
+    image: "clamav/clamav-debian:1.5.3"
+    user: "clamav"
+    entrypoint: "/init-unprivileged"
+    environment:
+      CLAMD_CONF_MaxFileSize: "42M"
+      CLAMD_CONF_MaxScanSize: "42M"
+      CLAMD_CONF_StreamMaxLength: "100M"
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    ports:
+      - "127.0.0.1:62006:3310"
+    volumes:
+      - "archivematica_pipeline_data:/var/archivematica/sharedDirectory:ro"
+      - "clamavd_data:/var/lib/clamav/:rw"
+
+  nginx:
+    image: "nginx:1.29.1"
+    volumes:
+      - "./.etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./.etc/nginx/conf.d/archivematica.conf:/etc/nginx/conf.d/archivematica.conf:ro"
+      - "./.etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro"
+    ports:
+      - "62080:80"
+      - "62081:8000"
 
 
 
