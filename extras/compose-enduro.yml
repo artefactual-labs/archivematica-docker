@@ -2,7 +2,6 @@ services:
   mysql-enduro-db:
     image: "percona/percona-server:8.4.10-10"
     platform: "linux/amd64"
-    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci"
     environment:
       MYSQL_ROOT_PASSWORD: "12345"
       MYSQL_USER: "archivematica"
@@ -10,9 +9,6 @@ services:
     volumes:
       - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
       - "mysql_data:/var/lib/mysql"
-      - "./.archivematica-init/:/docker-entrypoint-initdb.d/:ro"
-    cap_add:
-      - "SYS_NICE"
     entrypoint:
       - /bin/sh
       - -c
@@ -20,14 +16,14 @@ services:
         mysql -uroot -p12345 -e "CREATE DATABASE IF NOT EXISTS enduro;
                             CREATE DATABASE IF NOT EXISTS temporal;
                             CREATE DATABASE IF NOT EXISTS temporal_visibility;
-                            GRANT ALL PRIVILEGES ON enduro.* TO 'archivematica'@'%';
-                            GRANT ALL PRIVILEGES ON temporal.* TO 'archivematica'@'%';
-                         GRANT ALL PRIVILEGES ON temporal_visibility.* TO 'archivematica'@'%';"
+                            CREATE USER IF NOT EXISTS 'enduro'@'%' IDENTIFIED BY 'enduro123';
+                            CREATE USER IF NOT EXISTS 'temporal'@'%' IDENTIFIED BY 'temporal123';
+                            GRANT ALL PRIVILEGES ON enduro.* TO 'enduro'@'%';
+                            GRANT ALL PRIVILEGES ON temporal.* TO 'temporal'@'%';
+                         GRANT ALL PRIVILEGES ON temporal_visibility.* TO 'temporal'@'%';"
     depends_on:
       archivematica-dashboard:
         condition: service_healthy
-
-
 
   temporal-admin-tools:
     image: "temporalio/admin-tools:1.30.5"
@@ -38,16 +34,19 @@ services:
       mysql-enduro-db:
         condition: service_completed_successfully
     environment:
-      - "DB=enduro"
-      - "DB_PORT=3306"
-      - "MYSQL_USER=archivematica"
-      - "MYSQL_PWD=demo"
-      - "MYSQL_SEEDS=mysql"
-      - "SQL_PASSWORD=demo"
-    volumes:
-      - ".enduro-init/:/compose"
-    entrypoint: ["/bin/sh"]
-    command: "/compose/setup-mysql.sh"
+      - "MYSQL_USER=temporal"
+      - "MYSQL_PWD=temporal123"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eux
+        # Set up temporal database schema.
+        temporal-sql-tool --plugin mysql8 --ep mysql -u $${MYSQL_USER} -p 3306 -pw $${MYSQL_PWD} --db temporal setup-schema -v 0.0
+        temporal-sql-tool --plugin mysql8 --ep mysql -u $${MYSQL_USER} -p 3306 -pw $${MYSQL_PWD} --db temporal update-schema --schema-name mysql/v8/temporal
+        # Set up visibility database schema.
+        temporal-sql-tool --plugin mysql8 --ep mysql -u $${MYSQL_USER} -p 3306 -pw $${MYSQL_PWD} --db temporal_visibility setup-schema -v 0.0
+        temporal-sql-tool --plugin mysql8 --ep mysql -u $${MYSQL_USER} -p 3306 -pw $${MYSQL_PWD} --db temporal_visibility update-schema --schema-name mysql/v8/visibility
 
 
   temporal:
@@ -66,7 +65,7 @@ services:
       - "BIND_ON_IP=0.0.0.0"
       - "DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml"
     volumes:
-      - ".enduro-init/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
+      - ".etc/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
     ports:
       - "127.0.0.1:7233:7233"
     healthcheck:
@@ -87,10 +86,11 @@ services:
     environment:
       - "TEMPORAL_ADDRESS=temporal:7233"
       - "DEFAULT_NAMESPACE=default"
-    volumes:
-      - ".enduro-init/:/compose"
-    entrypoint: ["/bin/sh"]
-    command: "/compose/create-namespace.sh"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        temporal operator namespace create --namespace "$${DEFAULT_NAMESPACE}" --retention 72h
 
   temporal-ui:
     image: "temporalio/ui:2.51.1"
@@ -116,7 +116,7 @@ services:
       - "TEMPORAL_ADDRESS=temporal:7233"
         #- "TEMPORAL_CORS_ORIGINS=http://localhost:7440"
     volumes:
-      - ".enduro-init/enduro.toml:/etc/enduro.toml:ro"
+      - ".etc/enduro.toml:/etc/enduro.toml:ro"
       - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
     ports:
       - "127.0.0.1:9000:9000"
