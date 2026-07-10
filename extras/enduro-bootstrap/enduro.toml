@@ -60,11 +60,11 @@ name = "dev-fs"
 path = "/home/enduro"
 inotify = false
 pipeline = "am"
-completedDir = "./hack/landfill"
+completedDir = "/home/test/.done/"
 ignore = '(^\.gitkeep)|(^*\.mft)$'
 stripTopLevelDir = false
 rejectDuplicates = false
-excludeHiddenFiles = false
+excludeHiddenFiles = true
 transferType = "standard"
 
 [[pipeline]]
