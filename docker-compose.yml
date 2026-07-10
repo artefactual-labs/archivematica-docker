@@ -97,18 +97,7 @@ services:
   archivematica-storage-service:
     image: "artefactual/archivematica-storage-service:v0.24.0"
     platform: "linux/amd64"
-    environment: &ss-env
-    # Full list at https://github.com/artefactual/archivematica-storage-service/tree/stable/0.24.x/install#environment-variables
-      FORWARDED_ALLOW_IPS: "*"
-      SS_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
-      SS_DB_URL: "mysql://archivematica:demo@mysql/SS"
-      SS_GNUPG_HOME_PATH: "/var/archivematica/storage_service/.gnupg"
-      SS_PROMETHEUS_ENABLED: "true"
-      SS_AUDIT_LOG_MIDDLEWARE: "true"
-      SESSION_COOKIE_SECURE: "false"
-      CSRF_COOKIE_SECURE: "false"
-
+    env_file: "archivematica/ss-env"
     healthcheck:
       test: curl --fail http://localhost:8000 || exit 1
       interval: 10s
@@ -132,22 +121,7 @@ services:
   archivematica-dashboard:
     image: "artefactual/archivematica-dashboard:v1.18.0"
     platform: "linux/amd64"
-    environment: &dashboard-env
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/dashboard/install#parameter-list
-      FORWARDED_ALLOW_IPS: "*"
-      AM_GUNICORN_ACCESSLOG: "/dev/null"
-      DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
-      ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_AUDIT_LOG_MIDDLEWARE: "true"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_SESSION_COOKIE_SECURE: "false"
-      ARCHIVEMATICA_DASHBOARD_DASHBOARD_CSRF_COOKIE_SECURE: "false"
+    env_file: "archivematica/dashboard-env"
     healthcheck:
       test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/8000; exit $?;'"
       interval: 5s
@@ -168,18 +142,7 @@ services:
   archivematica-mcp-server:
     image: "artefactual/archivematica-mcp-server:v1.18.0"
     platform: "linux/amd64"
-    environment:
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/MCPServer/install#parameter-list
-      DJANGO_SECRET_KEY: "12345"
-      DJANGO_SETTINGS_MODULE: "archivematica.MCPServer.settings.common"
-      ARCHIVEMATICA_MCPSERVER_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_MCPSERVER_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_MCPSERVER_CLIENT_HOST: "mysql"
-      ARCHIVEMATICA_MCPSERVER_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_MCPSERVER_MCPSERVER_MCPARCHIVEMATICASERVER: "gearmand:4730"
-      ARCHIVEMATICA_MCPSERVER_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-aips}"
-      ARCHIVEMATICA_MCPSERVER_MCPSERVER_PROMETHEUS_BIND_PORT: "7999"
-      ARCHIVEMATICA_MCPSERVER_MCPSERVER_PROMETHEUS_BIND_ADDRESS: "0.0.0.0"
+    env_file: "archivematica/mcp-server-env"
     healthcheck:
       test: "bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/7999; exit $?;'"
       interval: 5s
@@ -200,24 +163,7 @@ services:
   archivematica-mcp-client:
     image: "artefactual/archivematica-mcp-client:v1.18.0"
     platform: "linux/amd64"
-    environment:
-    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/MCPClient/install#parameter-list
-      DJANGO_SECRET_KEY: "12345"
-      DJANGO_SETTINGS_MODULE: "archivematica.MCPClient.settings.common"
-      ARCHIVEMATICA_MCPCLIENT_CLIENT_USER: "archivematica"
-      ARCHIVEMATICA_MCPCLIENT_CLIENT_PASSWORD: "demo"
-      ARCHIVEMATICA_MCPCLIENT_CLIENT_HOST: "mysql"
-      ARCHIVEMATICA_MCPCLIENT_CLIENT_DATABASE: "MCP"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_ELASTICSEARCHSERVER: "http://elasticsearch:9200"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_MCPARCHIVEMATICASERVER: "gearmand:4730"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CAPTURE_CLIENT_SCRIPT_OUTPUT: "${AM_CAPTURE_CLIENT_SCRIPT_OUTPUT:-true}"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_SERVER: "clamavd:3310"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_CLIENT_MAX_FILE_SIZE: "42"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_CLIENT_MAX_SCAN_SIZE: "42"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_CLIENT_MAX_STREAM_LENGTH: "100"
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_CLAMAV_CLIENT_BACKEND: "clamdscanner" # Option: clamdscanner or clamscan;
-      ARCHIVEMATICA_MCPCLIENT_MCPCLIENT_METADATA_XML_VALIDATION_ENABLED: "false"
+    env_file: "archivematica/mcp-client-env"
     depends_on:
       archivematica-mcp-server:
         condition: service_healthy
