@@ -30,13 +30,10 @@ Regarding this repository, there are a few changes too:
 This allows to put them in a different filesystem with more space without having to reconfigure docker volumes.
 - Elasticsearch has been moved to extras/ due to it's high memory needs.
 - Archivematica [audit log](https://github.com/artefactual-labs/auditmatica/blob/main/README.md#usernames) is now enabled by default
-- Archivematica's backlog and appraisal tabs have been disabled, to better mimic the OAIS model in Archivematica
-
+- Enduro and Aipscan has been added to the stack
 
 Known problems
 --------------
-
-
 
 - MCPServer fails to boot and shows
 
