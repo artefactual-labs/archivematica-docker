@@ -1,0 +1,132 @@
+  # Migrations containers
+  # We run them always to ensure migrations in new versions take effect
+services:
+
+  mysql-archivematica-db:
+    image: "percona/percona-server:8.4.10-10"
+    environment:
+      MYSQL_ROOT_PASSWORD: "12345"
+      MYSQL_USER: "archivematica"
+      MYSQL_PASSWORD: "demo"
+    volumes:
+      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
+      - "mysql_data:/var/lib/mysql"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mysql -uroot -p$${MYSQL_ROOT_PASSWORD} -e "CREATE DATABASE IF NOT EXISTS MCP CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+                     CREATE DATABASE IF NOT EXISTS SS CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+                     GRANT ALL ON MCP.* TO 'archivematica'@'%';
+                     GRANT ALL ON SS.* TO 'archivematica'@'%';"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  archivematica-storage-service-migrations:
+    image: "artefactual/archivematica-storage-service:v0.24.0"
+    platform: "linux/amd64"
+    environment: &ss-env
+      # Full list at https://github.com/artefactual/archivematica-storage-service/tree/stable/0.24.x/install#environment-variables
+      FORWARDED_ALLOW_IPS: "*"
+      SS_GUNICORN_ACCESSLOG: "/dev/null"
+      DJANGO_SETTINGS_MODULE: "archivematica.storage_service.storage_service.settings.local"
+      SS_DB_URL: "mysql://archivematica:demo@mysql/SS"
+      SS_GNUPG_HOME_PATH: "/var/archivematica/storage_service/.gnupg"
+      SS_PROMETHEUS_ENABLED: "true"
+      SS_AUDIT_LOG_MIDDLEWARE: "true"
+      SESSION_COOKIE_SECURE: "false"
+      CSRF_COOKIE_SECURE: "false"
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.storage_service.manage
+       - migrate
+       - --noinput
+    depends_on:
+      mysql-archivematica-db:
+         condition: service_completed_successfully
+
+
+  archivematica-dashboard-migrations:
+    image: "artefactual/archivematica-dashboard:v1.18.0"
+    platform: "linux/amd64"
+    environment: &dashboard-env
+    # Full list at https://github.com/artefactual/archivematica/tree/stable/1.18.x/src/dashboard/install#parameter-list
+      FORWARDED_ALLOW_IPS: "*"
+      AM_GUNICORN_ACCESSLOG: "/dev/null"
+      DJANGO_SETTINGS_MODULE: "archivematica.dashboard.settings.local"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_GEARMAN_SERVER: "gearmand:4730"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_ELASTICSEARCH_SERVER: "http://elasticsearch:9200"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_PROMETHEUS_ENABLED: "1"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_USER: "archivematica"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_PASSWORD: "demo"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_HOST: "mysql"
+      ARCHIVEMATICA_DASHBOARD_CLIENT_DATABASE: "MCP"
+      ARCHIVEMATICA_DASHBOARD_SEARCH_ENABLED: "${AM_SEARCH_ENABLED:-false}"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_AUDIT_LOG_MIDDLEWARE: "true"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_SESSION_COOKIE_SECURE: "false"
+      ARCHIVEMATICA_DASHBOARD_DASHBOARD_CSRF_COOKIE_SECURE: "false"
+
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.dashboard.manage
+       - migrate
+       - --noinput
+    depends_on:
+      mysql-archivematica-db:
+         condition: service_completed_successfully
+    links:
+      - "mysql"
+
+  # Bootstrap commands
+  # Those are only needed the first time the system is registered
+
+  archivematica-storage-service-bootstrap:
+    image: "artefactual/archivematica-storage-service:v0.24.0"
+    platform: "linux/amd64"
+    environment: *ss-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.storage_service.manage
+       - create_user
+       - --username=${ARCHIVEMATICA_SS_USER:-test}
+       - --password=${ARCHIVEMATICA_SS_PASSWORD:-test}
+       - --email=${ARCHIVEMATICA_SS_EMAIL:-test}
+       - --api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
+       - --superuser
+    depends_on:
+      archivematica-storage-service-migrations:
+         condition: service_completed_successfully
+
+  archivematica-dashboard-bootstrap:
+    image: "artefactual/archivematica-dashboard:v1.18.0"
+    platform: "linux/amd64"
+    environment: *dashboard-env
+    entrypoint:
+       - python3
+       - -m
+       - archivematica.dashboard.manage
+       - install
+       - --username=${ARCHIVEMATICA_DASHBOARD_USER:-test}
+       - --password=${ARCHIVEMATICA_DASHBOARD_PASSWORD:-test}
+       - --email=${ARCHIVEMATICA_DASHBOARD_EMAIL:-test}
+       - --org-name=${ARCHIVEMATICA_DASHBOARD_ORG_NAME:-test}
+       - --org-id=${ARCHIVEMATICA_DASHBOARD_ORG_ID:-test}
+       - --api-key=${ARCHIVEMATICA_DASHBOARD_API_KEY:-test}
+       - --ss-url=http://archivematica-storage-service:8000
+       - --ss-user=${ARCHIVEMATICA_SS_USER:-test}
+       - --ss-api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
+       - --site-url=http://archivematica-dashboard:8000
+    depends_on:
+      archivematica-dashboard-migrations:
+         condition: service_completed_successfully
+      archivematica-storage-service:
+         condition: service_healthy
+      mysql:
+         condition: service_healthy
+    links:
+      - "mysql"
+      - "archivematica-storage-service"
