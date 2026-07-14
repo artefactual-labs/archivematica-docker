@@ -9,7 +9,7 @@ services:
       MYSQL_USER: "archivematica"
       MYSQL_PASSWORD: "demo"
     volumes:
-      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
+      - "./etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
       - "mysql_data:/var/lib/mysql"
     entrypoint:
       - /bin/sh

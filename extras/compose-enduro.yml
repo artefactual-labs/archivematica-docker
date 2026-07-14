@@ -7,7 +7,7 @@ services:
       MYSQL_USER: "archivematica"
       MYSQL_PASSWORD: "demo"
     volumes:
-      - "./.etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
+      - "./etc/mysql/tuning.cnf:/etc/my.cnf.d/tuning.cnf:ro"
       - "mysql_data:/var/lib/mysql"
     entrypoint:
       - /bin/sh
@@ -65,7 +65,7 @@ services:
       - "BIND_ON_IP=0.0.0.0"
       - "DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml"
     volumes:
-      - ".etc/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
+      - "./etc/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig"
     ports:
       - "127.0.0.1:7233:7233"
     healthcheck:
@@ -118,7 +118,7 @@ services:
       - "TEMPORAL_ADDRESS=temporal:7233"
         #- "TEMPORAL_CORS_ORIGINS=http://localhost:7440"
     volumes:
-      - ".etc/enduro.toml:/etc/enduro.toml:ro"
+      - "./etc/enduro.toml:/etc/enduro.toml:ro"
       - "${ARCHIVEMATICA_SS_TRANSFER_SOURCE:-./}:/home:rw"
     ports:
       - "127.0.0.1:9000:9000"
@@ -141,7 +141,7 @@ services:
       S3_BUCKET: "sips"
     volumes:
       - "./hack/seaweedfs-data:/data"
-      - ".etc/seaweedfs/notification.toml:/etc/seaweedfs/notification.toml:ro"
+      - "./etc/seaweedfs/notification.toml:/etc/seaweedfs/notification.toml:ro"
     ports:
       - "127.0.0.1:7460:8333"
       - "127.0.0.1:7461:8888"
