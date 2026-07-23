@@ -23,23 +23,10 @@ services:
       mysql:
         condition: service_healthy
 
-  archivematica-storage-service-migrations:
-    image: "artefactual/archivematica-storage-service:v0.24.0"
-    platform: "linux/amd64"
-    env_file: "ss-env"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.storage_service.manage
-       - migrate
-       - --noinput
-    depends_on:
-      mysql-archivematica-db:
-         condition: service_completed_successfully
 
 
   archivematica-dashboard-migrations:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "am-archivematica-dashboard:latest"
     platform: "linux/amd64"
     env_file: "dashboard-env"
     entrypoint:
@@ -56,27 +43,8 @@ services:
 
   # Bootstrap commands
   # Those are only needed the first time the system is registered
-
-  archivematica-storage-service-bootstrap:
-    image: "artefactual/archivematica-storage-service:v0.24.0"
-    platform: "linux/amd64"
-    env_file: "ss-env"
-    entrypoint:
-       - python3
-       - -m
-       - archivematica.storage_service.manage
-       - create_user
-       - --username=${ARCHIVEMATICA_SS_USER:-test}
-       - --password=${ARCHIVEMATICA_SS_PASSWORD:-test}
-       - --email=${ARCHIVEMATICA_SS_EMAIL:-test}
-       - --api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
-       - --superuser
-    depends_on:
-      archivematica-storage-service-migrations:
-         condition: service_completed_successfully
-
   archivematica-dashboard-bootstrap:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "am-archivematica-dashboard:latest"
     platform: "linux/amd64"
     env_file: "dashboard-env"
     entrypoint:
@@ -90,17 +58,14 @@ services:
        - --org-name=${ARCHIVEMATICA_DASHBOARD_ORG_NAME:-test}
        - --org-id=${ARCHIVEMATICA_DASHBOARD_ORG_ID:-test}
        - --api-key=${ARCHIVEMATICA_DASHBOARD_API_KEY:-test}
-       - --ss-url=http://archivematica-storage-service:8000
+       - --ss-url=http://192.168.1.137:62081
        - --ss-user=${ARCHIVEMATICA_SS_USER:-test}
        - --ss-api-key=${ARCHIVEMATICA_SS_APIKEY:-test}
        - --site-url=http://archivematica-dashboard:8000
     depends_on:
       archivematica-dashboard-migrations:
          condition: service_completed_successfully
-      archivematica-storage-service:
-         condition: service_healthy
       mysql:
          condition: service_healthy
     links:
       - "mysql"
-      - "archivematica-storage-service"
