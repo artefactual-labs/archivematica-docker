@@ -1,29 +1,34 @@
 # Architecture
 
-:q- One full stack
-    SS + Dashboard + MCP-C/S
+This branch has the Storage Service stripped down from the compose file. Is intended to deploy extra Archivematica pipelines against the same Storage Service
 
-- Extra instances
-   - Different sharedDirectory in .env
-        - Updated archivematica/env files
- 
-   - Use 63080 port in the same server
-   - Mounted the new shareDirectory in the ss
+- It relies on an already deployed full stack ( SS + Dashboard + MCP-C/S )
+
+- The extra instances need to use a different sharedDirectory folder defined in the .env file
+
+- The new sharedDirectory folders need to be added as env vars (check archivematica/*-env files)
+   
+- This repo uses port 630** to avoid collisions when running in the same host.
+
+- Tweak archivematica/bootstrap.yml as needed to point to the Storage service
+
+
+Storage service configuration:
+-------------------------------
+   - Mounted the new shareDirectory in the ss ( Use https://rclone.org/commands/rclone_mount/  if the server is different)
 
       - "/home/santi/workspace/github/scollazo/secondinstance/secondSharedDirectory:/var/archivematica/secondSharedDirectory:rw"
 
-   - SS configured with /var/archivematica/secondSharedDirectory as processing folder for the second pipeline
+   - Configure a processing location pointing to  /var/archivematica/secondSharedDirectory for the second pipeline (it should already be registered)
 
 
-To be tested:
- - Use .sharedDirectory folder for the new env
- - Mount it with a different name in the SS (?)
 
-Caveats:
+Caveats
+-------
  - We need to make the currentlyprocessing folder available to the SS
-    - Each pipeline needs configuration in the SS:
-    - If we mount it *from* the pipeline, the IO is mostly local, and only the copy from the TS and to the AIPstore is network-bound (Use rclone mounts ( https://rclone.org/commands/rclone_mount/ )
-    - Transfer Sources and AIPstores are shared between instances
+    - Each pipeline needs configuration in the SS
+    - If we mount it *from* the pipeline, the IO is mostly local, and only the copy from the TS and to the AIPstore is network-bound
+    - Transfer Sources and AIPstores are shared between instances, but processingConfigs arent
 
 
  - Options to be considered:
