@@ -15,20 +15,23 @@ This branch has the Storage Service stripped down from the compose file. Is inte
 
 Storage service configuration:
 -------------------------------
-   - Mounted the new shareDirectory in the ss ( Use https://rclone.org/commands/rclone_mount/  if the server is different)
+   - Mounted the new shareDirectory in the SS ( Use NFS or https://rclone.org/commands/rclone_mount/  if the server is different).  This way the actual 
+   processing I/O will use the local disk, and only the copy from the TS and to the AIPstore is network bound.
 
-      - "/home/santi/workspace/github/scollazo/secondinstance/secondSharedDirectory:/var/archivematica/secondSharedDirectory:rw"
-
+   - Add an overlay to the storage-service container with the sharedDirectory of each instance:
+   ```
+   services:
+     archivematica-storage-service:
+       volumes:
+         - "/path/to/the/mounted/volume:/var/archivematica/secondSharedDirectory:rw"
+   ```
    - Configure a processing location pointing to  /var/archivematica/secondSharedDirectory for the second pipeline (it should already be registered)
-
-
 
 Caveats
 -------
  - We need to make the currentlyprocessing folder available to the SS
     - Each pipeline needs configuration in the SS
-    - If we mount it *from* the pipeline, the IO is mostly local, and only the copy from the TS and to the AIPstore is network-bound
-    - Transfer Sources and AIPstores are shared between instances, but processingConfigs arent
+   - Transfer Sources and AIPstores are shared between instances, but processingConfigs arent
 
 
  - Options to be considered:
