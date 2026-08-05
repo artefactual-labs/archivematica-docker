@@ -24,7 +24,7 @@ services:
         condition: service_healthy
 
   archivematica-storage-service-migrations:
-    image: "artefactual/archivematica-storage-service:v0.24.0"
+    image: "${STORAGE_SERVICE_IMAGE:-artefactual/archivematica-storage-service:v0.24.0}"
     platform: "linux/amd64"
     env_file: "ss-env"
     entrypoint:
@@ -39,7 +39,7 @@ services:
 
 
   archivematica-dashboard-migrations:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "${DASHBOARD_IMAGE:-artefactual/archivematica-dashboard:v1.18.0}"
     platform: "linux/amd64"
     env_file: "dashboard-env"
     entrypoint:
@@ -58,7 +58,7 @@ services:
   # Those are only needed the first time the system is registered
 
   archivematica-storage-service-bootstrap:
-    image: "artefactual/archivematica-storage-service:v0.24.0"
+    image: "${STORAGE_SERVICE_IMAGE:-artefactual/archivematica-storage-service:v0.24.0}"
     platform: "linux/amd64"
     env_file: "ss-env"
     entrypoint:
@@ -76,7 +76,7 @@ services:
          condition: service_completed_successfully
 
   archivematica-dashboard-bootstrap:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "${DASHBOARD_IMAGE:-artefactual/archivematica-dashboard:v1.18.0}"
     platform: "linux/amd64"
     env_file: "dashboard-env"
     entrypoint:

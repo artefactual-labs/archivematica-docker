@@ -59,7 +59,7 @@ services:
        retries: 10
 
   archivematica-storage-service:
-    image: "artefactual/archivematica-storage-service:v0.24.0"
+    image: "${STORAGE_SERVICE_IMAGE:-artefactual/archivematica-storage-service:v0.24.0}"
     platform: "linux/amd64"
     env_file: "archivematica/ss-env"
     healthcheck:
@@ -83,7 +83,7 @@ services:
       - "mysql"
 
   archivematica-dashboard:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "${DASHBOARD_IMAGE:-artefactual/archivematica-dashboard:v1.18.0}"
     platform: "linux/amd64"
     env_file: "archivematica/dashboard-env"
     healthcheck:
@@ -104,7 +104,7 @@ services:
       - "archivematica-storage-service"
 
   archivematica-mcp-server:
-    image: "artefactual/archivematica-mcp-server:v1.18.0"
+    image: "${MCP_SERVER_IMAGE:-artefactual/archivematica-mcp-server:v1.18.0}"
     platform: "linux/amd64"
     env_file: "archivematica/mcp-server-env"
     healthcheck:
@@ -125,7 +125,7 @@ services:
       - "gearmand"
 
   archivematica-mcp-client:
-    image: "artefactual/archivematica-mcp-client:v1.18.0"
+    image: "${MCP_CLIENT_IMAGE:-artefactual/archivematica-mcp-client:v1.18.0}"
     platform: "linux/amd64"
     env_file: "archivematica/mcp-client-env"
     depends_on:

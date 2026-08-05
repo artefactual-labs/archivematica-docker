@@ -33,7 +33,7 @@ services:
     ports:
       - "127.0.0.1:52002:9200"
   archivematica-elasticsearch-upgrade:
-    image: "artefactual/archivematica-dashboard:v1.18.0"
+    image: "${DASHBOARD_IMAGE:-artefactual/archivematica-dashboard:v1.18.0}"
     platform: "linux/amd64"
     entrypoint:
       - /bin/bash
