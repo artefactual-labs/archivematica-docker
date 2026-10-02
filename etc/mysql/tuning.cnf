@@ -1,0 +1,10 @@
+[mysqld]
+innodb_buffer_pool_size=1G
+innodb_redo_log_capacity=256M
+innodb_flush_log_at_trx_commit=2
+innodb_doublewrite=0
+innodb_flush_method=O_DIRECT
+skip_log_bin
+sync_binlog=0
+performance_schema=OFF
+max_allowed_packet=256M
