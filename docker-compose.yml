@@ -53,7 +53,7 @@ services:
     cap_add:
       - "SYS_NICE"
     healthcheck:
-       test: ["CMD-SHELL", "mysqladmin ping --protocol=socket -uroot --silent"]
+       test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp -h 127.0.0.1 -uroot --silent"]
        interval: 2s
        timeout: 5s
        retries: 30
