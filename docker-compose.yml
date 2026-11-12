@@ -139,7 +139,7 @@ services:
        - migrate
        - --noinput
     env_file: "environments/archivematica-storage-service.env"
-    depends_on:
+    depends_on: !override
       mysql:
          condition: service_healthy
 
@@ -153,7 +153,7 @@ services:
        - archivematica.dashboard.manage
        - migrate
        - --noinput
-    depends_on:
+    depends_on: !override
       mysql:
          condition: service_healthy
 
@@ -226,6 +226,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      archivematica-storage-service-migrations:
+        condition: service_completed_successfully
     configs:
       - source: passwd
         target: /etc/passwd
@@ -258,6 +260,8 @@ services:
          required: false
       mysql:
          condition: service_healthy
+      archivematica-dashboard-migrations:
+         condition: service_completed_successfully
     configs:
       - source: passwd
         target: /etc/passwd
